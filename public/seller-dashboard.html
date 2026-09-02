@@ -62,25 +62,46 @@
           <option value="pa-IN" data-label="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
         </select>
       </div>
-      <p class="text-xs text-on-surface-variant mt-1">Pick your language, tap the mic, and describe the product out loud - e.g. "A handmade teak wood elephant, ₹850, 5 in stock, traditional style, good as a gift." We'll convert your voice to text and fill in the form in English &amp; Hindi.</p>
+      <p class="text-xs text-on-surface-variant mt-1">Pick your language, tap the mic, and describe the product out loud - e.g. "A handmade teak wood elephant, ₹850, 5 in stock, traditional style, good as a gift." We'll convert your voice to text and fill in the form in English, Hindi &amp; Tamil.</p>
       <p id="voice-status" class="text-xs mt-1"></p>
       <p id="voice-transcript" class="text-xs italic text-on-surface-variant mt-1"></p>
     </div>
 
     <form id="product-form" class="flex flex-col gap-3">
       <input type="hidden" id="p-id">
-      <input type="hidden" id="p-title-hi">
       <div>
         <label class="block text-sm font-medium mb-1" data-i18n="seller.title.field">Title</label>
         <input id="p-title" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
       </div>
       <div>
-        <div class="flex items-center justify-between">
-          <label class="block text-sm font-medium mb-1" data-i18n="seller.description">Description</label>
-          <button type="button" id="toggle-desc-hi" class="hidden text-xs text-secondary hover:underline mb-1">देखें हिंदी में</button>
-        </div>
+        <label class="block text-sm font-medium mb-1" data-i18n="seller.description">Description</label>
         <textarea id="p-description" required rows="3" class="w-full border border-outline-variant rounded px-3 py-2 text-sm"></textarea>
-        <textarea id="p-description-hi" rows="3" placeholder="हिंदी विवरण (आवाज़ से अपने आप बनेगा)" class="hidden w-full border border-outline-variant rounded px-3 py-2 text-sm mt-2"></textarea>
+      </div>
+
+      <div class="border border-outline-variant rounded-lg">
+        <button type="button" id="toggle-translations" class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-secondary">
+          <span>🌐 Hindi &amp; Tamil translations (optional)</span>
+          <span id="toggle-translations-icon" class="material-symbols-outlined text-[18px]">expand_more</span>
+        </button>
+        <div id="translations-panel" class="hidden px-3 pb-3 flex flex-col gap-3">
+          <p class="text-xs text-on-surface-variant">Shown to buyers automatically when they switch the site to Hindi or Tamil. Leave blank to fall back to the English text — or type your own translation, or use the mic above to auto-fill both.</p>
+          <div>
+            <label class="block text-xs font-medium mb-1">Title (हिंदी / Hindi)</label>
+            <input id="p-title-hi" placeholder="हिंदी शीर्षक" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">Description (हिंदी / Hindi)</label>
+            <textarea id="p-description-hi" rows="3" placeholder="हिंदी विवरण" class="w-full border border-outline-variant rounded px-3 py-2 text-sm"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">Title (தமிழ் / Tamil)</label>
+            <input id="p-title-ta" placeholder="தமிழ் தலைப்பு" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">Description (தமிழ் / Tamil)</label>
+            <textarea id="p-description-ta" rows="3" placeholder="தமிழ் விளக்கம்" class="w-full border border-outline-variant rounded px-3 py-2 text-sm"></textarea>
+          </div>
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -176,8 +197,8 @@ async function loadProducts() {
         ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'><span class=\\'material-symbols-outlined text-outline\\'>image</span></div>'">` : `<div class="w-full h-full flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>`}
       </div>
       <div class="flex-1">
-        <p class="font-body text-sm font-medium">${escapeHtml(p.title)}</p>
-        <p class="text-xs text-on-surface-variant">${escapeHtml(p.category)} • Stock: ${p.stock}</p>
+        <p class="font-body text-sm font-medium">${escapeHtml(lcProductTitle(p))}</p>
+        <p class="text-xs text-on-surface-variant">${escapeHtml(lcCategoryLabel(p.category))} • Stock: ${p.stock}</p>
         <p class="text-primary font-semibold">₹${p.price}</p>
         <div class="flex gap-3 mt-2 text-xs">
           <button data-edit="${p.id}" class="text-secondary hover:underline">${t("common.edit")}</button>
@@ -271,8 +292,10 @@ function openModal(product = null) {
   document.getElementById("p-id").value = product?.id || "";
   document.getElementById("p-title").value = product?.title || "";
   document.getElementById("p-title-hi").value = product?.titleHi || "";
+  document.getElementById("p-title-ta").value = product?.titleTa || "";
   document.getElementById("p-description").value = product?.description || "";
   document.getElementById("p-description-hi").value = product?.descriptionHi || "";
+  document.getElementById("p-description-ta").value = product?.descriptionTa || "";
   document.getElementById("p-category").value = product?.category || "";
   document.getElementById("p-price").value = product?.price ?? "";
   document.getElementById("p-stock").value = product?.stock ?? "";
@@ -281,9 +304,10 @@ function openModal(product = null) {
   document.querySelectorAll(".p-purpose").forEach(cb => cb.checked = (product?.purposes || []).includes(cb.value));
   document.getElementById("analyze-status").textContent = "";
   document.getElementById("price-status").textContent = "";
-  document.getElementById("toggle-desc-hi").classList.toggle("hidden", !product?.descriptionHi);
-  document.getElementById("p-description-hi").classList.add("hidden");
-  document.getElementById("toggle-desc-hi").textContent = "देखें हिंदी में";
+  // Auto-expand the translations panel when editing a product that already
+  // has a translation, so the seller sees it's there without extra clicks.
+  const hasTranslation = !!(product?.titleHi || product?.titleTa || product?.descriptionHi || product?.descriptionTa);
+  setTranslationsPanelOpen(hasTranslation);
   existingImages = (product?.images && product.images.length) ? [...product.images] : (product?.image ? [product.image] : []);
   newImageFiles = [];
   renderImagePreviews();
@@ -296,11 +320,13 @@ function closeModal() {
 document.getElementById("add-product-btn").onclick = () => openModal();
 document.getElementById("cancel-modal").onclick = closeModal;
 
-document.getElementById("toggle-desc-hi").onclick = () => {
-  const hiBox = document.getElementById("p-description-hi");
-  const showing = !hiBox.classList.contains("hidden");
-  hiBox.classList.toggle("hidden", showing);
-  document.getElementById("toggle-desc-hi").textContent = showing ? "देखें हिंदी में" : "Show in English";
+function setTranslationsPanelOpen(open) {
+  document.getElementById("translations-panel").classList.toggle("hidden", !open);
+  document.getElementById("toggle-translations-icon").textContent = open ? "expand_less" : "expand_more";
+}
+document.getElementById("toggle-translations").onclick = () => {
+  const isOpen = !document.getElementById("translations-panel").classList.contains("hidden");
+  setTranslationsPanelOpen(!isOpen);
 };
 
 document.getElementById("product-form").onsubmit = async (e) => {
@@ -309,8 +335,10 @@ document.getElementById("product-form").onsubmit = async (e) => {
   const fd = new FormData();
   fd.append("title", document.getElementById("p-title").value);
   fd.append("titleHi", document.getElementById("p-title-hi").value);
+  fd.append("titleTa", document.getElementById("p-title-ta").value);
   fd.append("description", document.getElementById("p-description").value);
   fd.append("descriptionHi", document.getElementById("p-description-hi").value);
+  fd.append("descriptionTa", document.getElementById("p-description-ta").value);
   fd.append("category", document.getElementById("p-category").value);
   fd.append("price", document.getElementById("p-price").value);
   fd.append("stock", document.getElementById("p-stock").value);
@@ -421,11 +449,11 @@ if (!SpeechRecognitionAPI) {
       const data = await api("/api/seller/analyze-voice", { method: "POST", body: { transcript, language: spokenLanguageLabel } });
       if (data.title) document.getElementById("p-title").value = data.title;
       if (data.titleHi) document.getElementById("p-title-hi").value = data.titleHi;
+      if (data.titleTa) document.getElementById("p-title-ta").value = data.titleTa;
       if (data.description) document.getElementById("p-description").value = data.description;
-      if (data.descriptionHi) {
-        document.getElementById("p-description-hi").value = data.descriptionHi;
-        document.getElementById("toggle-desc-hi").classList.remove("hidden");
-      }
+      if (data.descriptionHi) document.getElementById("p-description-hi").value = data.descriptionHi;
+      if (data.descriptionTa) document.getElementById("p-description-ta").value = data.descriptionTa;
+      if (data.titleHi || data.titleTa || data.descriptionHi || data.descriptionTa) setTranslationsPanelOpen(true);
       if (data.category) document.getElementById("p-category").value = data.category;
       if (data.price !== null && data.price !== undefined && data.price !== "") document.getElementById("p-price").value = data.price;
       if (data.stock !== null && data.stock !== undefined && data.stock !== "") document.getElementById("p-stock").value = data.stock;
@@ -434,7 +462,7 @@ if (!SpeechRecognitionAPI) {
       if (Array.isArray(data.purposes)) {
         document.querySelectorAll(".p-purpose").forEach(cb => cb.checked = data.purposes.includes(cb.value));
       }
-      setVoiceStatus("Filled in from your voice (English + Hindi) - please review before saving.", "text-success");
+      setVoiceStatus("Filled in from your voice (English + Hindi + Tamil) - please review before saving.", "text-success");
     } catch (err) {
       setVoiceStatus(err.message, "text-error");
     }

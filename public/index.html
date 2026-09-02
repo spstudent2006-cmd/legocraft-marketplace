@@ -99,14 +99,16 @@ async function loadFeatured() {
   }
 }
 function cardHtml(p) {
-  const img = p.image ? `<img src="${p.image}" class="w-full h-full object-cover" alt="${escapeHtml(p.title)}">` : `<div class="w-full h-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-[32px] text-outline">image</span></div>`;
+  const title = lcProductTitle(p);
+  const img = p.image ? `<img src="${p.image}" class="w-full h-full object-cover" alt="${escapeHtml(title)}">` : `<div class="w-full h-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-[32px] text-outline">image</span></div>`;
   return `<a href="/product.html?id=${p.id}" class="block group">
     <div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low">${img}</div>
-    <p class="mt-2 font-body text-sm text-on-surface line-clamp-2 group-hover:text-primary">${escapeHtml(p.title)}</p>
+    <p class="mt-2 font-body text-sm text-on-surface line-clamp-2 group-hover:text-primary">${escapeHtml(title)}</p>
     <p class="font-body font-semibold text-primary">₹${p.price}</p>
   </a>`;
 }
 loadFeatured();
+document.addEventListener("lc-lang-changed", loadFeatured);
 </script>
 </body>
 </html>

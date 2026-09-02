@@ -253,7 +253,7 @@ function parsePurposes(raw) {
 }
 
 app.post("/api/seller/products", requireAuth(["seller"]), upload.array("images", MAX_PRODUCT_IMAGES), (req, res) => {
-  let { title, titleHi, description, descriptionHi, category, price, stock, material, style, purposes } = req.body || {};
+  let { title, titleHi, titleTa, description, descriptionHi, descriptionTa, category, price, stock, material, style, purposes } = req.body || {};
   category = String(category || "").trim();
   if (!title || !description || !category || !price) {
     return res.status(400).json({ error: "Title, description, category and price are required." });
@@ -272,7 +272,9 @@ app.post("/api/seller/products", requireAuth(["seller"]), upload.array("images",
     sellerId: req.user.id,
     title, description, category,
     titleHi: titleHi || null,
+    titleTa: titleTa || null,
     descriptionHi: descriptionHi || null,
+    descriptionTa: descriptionTa || null,
     price: Math.max(0, Number(price)),
     stock: Math.max(0, Number(stock || 0)),
     material: MATERIALS.includes(material) ? material : "Other",
@@ -293,11 +295,13 @@ app.put("/api/seller/products/:id", requireAuth(["seller"]), upload.array("image
   const db = DB.read();
   const product = db.products.find(p => p.id === req.params.id && p.sellerId === req.user.id);
   if (!product) return res.status(404).json({ error: "Product not found." });
-  let { title, titleHi, description, descriptionHi, category, price, stock, status, material, style, purposes, existingImages } = req.body || {};
+  let { title, titleHi, titleTa, description, descriptionHi, descriptionTa, category, price, stock, status, material, style, purposes, existingImages } = req.body || {};
   if (title) product.title = title;
   if (titleHi !== undefined) product.titleHi = titleHi || null;
+  if (titleTa !== undefined) product.titleTa = titleTa || null;
   if (description) product.description = description;
   if (descriptionHi !== undefined) product.descriptionHi = descriptionHi || null;
+  if (descriptionTa !== undefined) product.descriptionTa = descriptionTa || null;
   if (category !== undefined && category !== "") {
     category = String(category).trim();
     if (category.length < 3) return res.status(400).json({ error: "Category must be at least 3 characters (e.g. \"Pottery\", not \"C\")." });
@@ -500,7 +504,7 @@ Return only the edited photo.` },
    seller's spoken description - in English or a regional Indian language -
    into text on the client, and this route asks Gemini to translate and
    turn that transcript into structured, SEO-friendly product fields in
-   both English and Hindi, which the seller can review and edit before
+   English, Hindi and Tamil, which the seller can review and edit before
    saving. Requires GEMINI_API_KEY in .env. */
 app.post("/api/seller/analyze-voice", requireAuth(["seller"]), async (req, res) => {
   const { transcript, language } = req.body || {};
@@ -520,8 +524,10 @@ Translate and extract listing details from it. Write SEO-friendly, professional 
 {
   "title": "short product title in English, or null",
   "titleHi": "the same short product title translated into Hindi (Devanagari script), or null",
+  "titleTa": "the same short product title translated into Tamil (Tamil script), or null",
   "description": "2-3 sentence professional SEO-friendly description in English, written from what the seller said, or null",
   "descriptionHi": "the same description translated and written naturally in Hindi (Devanagari script), or null",
+  "descriptionTa": "the same description translated and written naturally in Tamil (Tamil script), or null",
   "category": "a short category like Pottery, Woodwork, Textiles, or null",
   "price": number in Indian rupees or null,
   "stock": integer quantity or null,

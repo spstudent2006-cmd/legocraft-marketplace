@@ -103,8 +103,8 @@ async function loadProducts() {
   document.getElementById("product-list").innerHTML = active.map(p => `
     <div class="flex flex-wrap items-center justify-between gap-2 border border-surface-container rounded-lg p-3 text-sm">
       <div>
-        <p class="font-medium">${escapeHtml(p.title)}</p>
-        <p class="text-xs text-on-surface-variant">${escapeHtml(p.category)} • ${escapeHtml(p.shopName)} • ₹${p.price} • Stock ${p.stock}</p>
+        <p class="font-medium">${escapeHtml(lcProductTitle(p))}</p>
+        <p class="text-xs text-on-surface-variant">${escapeHtml(lcCategoryLabel(p.category))} • ${escapeHtml(p.shopName)} • ₹${p.price} • Stock ${p.stock}</p>
       </div>
       <button data-remove="${p.id}" class="text-error hover:underline text-xs">${t("common.remove")}</button>
     </div>`).join("") || `<p class="text-on-surface-variant py-8 text-center">${t("admin.noProducts")}</p>`;

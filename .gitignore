@@ -3,3 +3,7 @@ node_modules/
 data/db.json
 public/uploads/*
 !public/uploads/.gitkeep
+
+bac/*.zip
+*.zip
+proc image/

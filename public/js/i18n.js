@@ -410,7 +410,7 @@ const translations = {
     "products.category": "வகை",
 
     "product.notSpecified": "பொருள் குறிப்பிடப்படவில்லை.",
-    "product.readHindi": "हिंदी में पढ़ें (இந்தியில் படிக்க)",
+    "product.readHindi": "தமிழில் படிக்க (Read in Tamil)",
     "product.readEnglish": "ஆங்கிலத்தில் படிக்க (Read in English)",
 
     "cart.title": "உங்கள் கார்ட்",
@@ -524,6 +524,55 @@ const translations = {
     "seller.noOrdersYet": "இன்னும் ஆர்டர்கள் இல்லை."
   }
 };
+
+// Static translations for the fixed set of demo/seed categories. Sellers can
+// still add new categories in any language; those simply fall back to the
+// text the seller typed, since we can't machine-translate arbitrary strings
+// client-side.
+const CATEGORY_TRANSLATIONS = {
+  hi: {
+    "Wall Art": "वॉल आर्ट",
+    "Pottery": "मिट्टी के बर्तन",
+    "Textiles": "वस्त्र",
+    "Home Decor": "होम डेकोर",
+    "Toys": "खिलौने",
+    "Jewelry": "आभूषण",
+    "Idols & Figurines": "मूर्तियाँ और प्रतिमाएँ"
+  },
+  ta: {
+    "Wall Art": "சுவர் ஓவியம்",
+    "Pottery": "மட்பாண்டங்கள்",
+    "Textiles": "ஜவுளி",
+    "Home Decor": "வீட்டு அலங்காரம்",
+    "Toys": "பொம்மைகள்",
+    "Jewelry": "நகைகள்",
+    "Idols & Figurines": "சிலைகள் மற்றும் உருவங்கள்"
+  }
+};
+
+// Resolves a product's title/description in the currently selected site
+// language, falling back to English when no translation exists for that
+// product (e.g. a seller-added product with no Hindi/Tamil text yet).
+function lcProductTitle(p) {
+  if (!p) return "";
+  const lang = lcGetLang();
+  if (lang === "hi" && p.titleHi) return p.titleHi;
+  if (lang === "ta" && p.titleTa) return p.titleTa;
+  return p.title;
+}
+
+function lcProductDescription(p) {
+  if (!p) return "";
+  const lang = lcGetLang();
+  if (lang === "hi" && p.descriptionHi) return p.descriptionHi;
+  if (lang === "ta" && p.descriptionTa) return p.descriptionTa;
+  return p.description;
+}
+
+function lcCategoryLabel(name) {
+  const lang = lcGetLang();
+  return (CATEGORY_TRANSLATIONS[lang] && CATEGORY_TRANSLATIONS[lang][name]) || name;
+}
 
 function lcGetLang() {
   return localStorage.getItem(LC_LANG_KEY) || "en";
