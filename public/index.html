@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legocraft | Crafted by Hands</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+<style>[x-cloak]{display:none}</style>
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-6xl mx-auto px-4 md:px-8">
+  <section class="min-h-[70vh] flex flex-col md:flex-row items-center gap-10 py-12">
+    <div class="flex-1">
+      <h1 class="font-display text-4xl md:text-6xl text-primary leading-tight"><span data-i18n="home.h1.line1">Your Craft.</span><br><span data-i18n="home.h1.line2">Your Story.</span><br><span class="text-secondary" data-i18n="home.h1.line3">Your Marketplace.</span></h1>
+      <p class="mt-6 text-lg text-on-surface-variant max-w-md" data-i18n="home.subtitle">Buy directly from India's artisans, or start selling your own handmade work in minutes — no middlemen, no hidden fees.</p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="/products.html" data-i18n="home.shopHandmade" class="bg-primary text-on-primary rounded font-body font-medium px-6 py-3 hover:bg-primary-container transition-colors">Shop Handmade</a>
+        <a href="/seller-register.html" data-i18n="home.startSelling" class="border border-secondary text-secondary rounded font-body font-medium px-6 py-3 hover:bg-secondary-container/20 transition-colors">Start Selling</a>
+      </div>
+    </div>
+    <div class="flex-1 grid grid-cols-2 gap-3">
+      <div class="aspect-square rounded-lg bg-secondary-container/40 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=500&q=80" alt="Potter shaping clay on a wheel" class="w-full h-full object-cover" onerror="this.remove()">
+      </div>
+      <div class="aspect-square rounded-lg bg-primary-container/60 mt-6 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1509909756405-be0199881695?w=500&q=80" alt="Handwoven textile craft" class="w-full h-full object-cover" onerror="this.remove()">
+      </div>
+      <div class="aspect-square rounded-lg bg-tertiary/20 -mt-6 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?w=500&q=80" alt="Hand-carved wooden craft" class="w-full h-full object-cover" onerror="this.remove()">
+      </div>
+      <div class="aspect-square rounded-lg bg-secondary/20 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=500&q=80" alt="Handmade pottery display" class="w-full h-full object-cover" onerror="this.remove()">
+      </div>
+    </div>
+  </section>
+
+  <section class="py-10 border-t border-surface-container">
+    <div class="rounded-xl bg-primary text-white px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div>
+        <p class="text-2xl mb-1">🧩</p>
+        <h2 class="font-display text-2xl md:text-3xl" data-i18n="home.puzzleTitle">Not sure what to buy?</h2>
+        <p class="text-primary-fixed-dim mt-2 max-w-md" data-i18n="home.puzzleSubtitle">Play the Build Your Craft puzzle — three quick questions and we'll find a handmade piece that fits.</p>
+      </div>
+      <a href="/puzzle.html" data-i18n="home.startPuzzle" class="bg-secondary text-on-secondary font-medium px-6 py-3 rounded hover:opacity-90 transition-opacity whitespace-nowrap">Start the Puzzle →</a>
+    </div>
+  </section>
+
+  <section class="py-12 border-t border-surface-container">
+    <div class="flex items-end justify-between mb-6">
+      <h2 class="font-display text-2xl md:text-3xl text-primary" data-i18n="home.featured">Featured Products</h2>
+      <a href="/products.html" data-i18n="common.viewAll" class="text-secondary hover:underline font-body text-sm">View all →</a>
+    </div>
+    <div id="featured-grid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+  </section>
+
+  <section class="py-12 border-t border-surface-container grid md:grid-cols-3 gap-6 text-center">
+    <div class="p-6">
+      <span class="material-symbols-outlined text-[36px] text-secondary">verified</span>
+      <p class="font-display text-lg mt-2" data-i18n="home.f1.title">100% Handmade</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="home.f1.desc">Every item verified as authentic artisan work.</p>
+    </div>
+    <div class="p-6">
+      <span class="material-symbols-outlined text-[36px] text-secondary">payments</span>
+      <p class="font-display text-lg mt-2" data-i18n="home.f2.title">Fair Pricing</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="home.f2.desc">Artisans set their own prices — no middleman markup.</p>
+    </div>
+    <div class="p-6">
+      <span class="material-symbols-outlined text-[36px] text-secondary">local_shipping</span>
+      <p class="font-display text-lg mt-2" data-i18n="home.f3.title">Tracked Delivery</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="home.f3.desc">Follow every order from workshop to doorstep.</p>
+    </div>
+  </section>
+</main>
+
+<div id="lc-footer"></div>
+
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+async function loadFeatured() {
+  const grid = document.getElementById("featured-grid");
+  try {
+    const { products } = await api("/api/products");
+    grid.innerHTML = products.slice(0, 8).map(cardHtml).join("") || `<p class="col-span-full text-on-surface-variant">No products yet.</p>`;
+  } catch (e) {
+    grid.innerHTML = `<p class="col-span-full text-error">${e.message}</p>`;
+  }
+}
+function cardHtml(p) {
+  const img = p.image ? `<img src="${p.image}" class="w-full h-full object-cover" alt="${escapeHtml(p.title)}">` : `<div class="w-full h-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-[32px] text-outline">image</span></div>`;
+  return `<a href="/product.html?id=${p.id}" class="block group">
+    <div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low">${img}</div>
+    <p class="mt-2 font-body text-sm text-on-surface line-clamp-2 group-hover:text-primary">${escapeHtml(p.title)}</p>
+    <p class="font-body font-semibold text-primary">₹${p.price}</p>
+  </a>`;
+}
+loadFeatured();
+</script>
+</body>
+</html>

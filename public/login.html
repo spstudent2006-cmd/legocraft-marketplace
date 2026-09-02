@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<!-- Sign-up tutorial video: shown automatically for first-time visitors landing
+     on Login (many new users start here before signing up). Skippable, and the
+     choice is remembered so it won't show again once seen or skipped. -->
+<div id="signup-video-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+      <p class="font-display text-lg text-primary" data-i18n="video.howItWorks">How signing up works</p>
+      <button id="signup-video-skip" class="text-sm text-on-surface-variant hover:text-primary font-medium" data-i18n="video.skip">Skip</button>
+    </div>
+    <div class="aspect-video bg-surface-container-high relative">
+      <video id="signup-video" class="w-full h-full" controls playsinline preload="metadata" poster="/videos/how-to-signup-poster.jpg">
+        <source src="/videos/how-to-signup.mp4" type="video/mp4">
+      </video>
+      <div id="signup-video-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6">
+        <span class="material-symbols-outlined text-[40px] text-outline">videocam_off</span>
+        <p class="text-sm text-on-surface-variant" data-i18n="video.unavailable">The tutorial video isn't available yet.</p>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-4 py-3">
+      <button id="signup-video-continue" class="bg-primary text-on-primary font-medium px-5 py-2 rounded hover:bg-primary-container transition-colors" data-i18n="video.continue">Continue</button>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-sm mx-auto px-4 py-12">
+  <h1 class="font-display text-3xl text-primary mb-2 text-center" data-i18n="login.title">Welcome Back</h1>
+  <p class="text-center text-sm text-on-surface-variant mb-2" data-i18n="login.subtitle">Log in to your Legocraft account</p>
+  <p class="text-center text-sm mb-8"><button id="signup-video-replay" class="text-secondary hover:underline" data-i18n="login.watchVideo">New here? Watch how sign up works</button></p>
+
+  <form id="login-form" class="flex flex-col gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1" data-i18n="login.identifier">Email or Phone Number</label>
+      <input id="identifier" type="text" required data-i18n-placeholder="login.identifierPlaceholder" placeholder="you@example.com or 9876543210" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1" data-i18n="login.password">Password</label>
+      <input id="password" type="password" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+    </div>
+    <button class="bg-primary text-on-primary font-medium py-3 rounded hover:bg-primary-container transition-colors" data-i18n="login.submit">Log In</button>
+  </form>
+
+  <p class="text-center text-sm text-on-surface-variant mt-6"><span data-i18n="login.noAccount">No account?</span> <a href="/register.html" class="text-secondary hover:underline" data-i18n="login.signUp">Sign up</a></p>
+
+  <div class="mt-8 p-4 bg-surface-container-low rounded-lg text-xs text-on-surface-variant">
+    <p class="font-medium mb-1" data-i18n="login.demoAccounts">Demo accounts</p>
+    <p>Admin: admin@legocraft.com / Admin@123</p>
+    <p>Seller: seller@legocraft.com or 9800000001 / Seller@123</p>
+  </div>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+/* ---------- Sign-up tutorial video ---------- */
+const SEEN_KEY = "lc_signup_tutorial_seen";
+const videoModal = document.getElementById("signup-video-modal");
+const video = document.getElementById("signup-video");
+const videoFallback = document.getElementById("signup-video-fallback");
+
+function openSignupVideo() {
+  videoModal.classList.remove("hidden");
+  videoFallback.classList.add("hidden");
+  video.classList.remove("hidden");
+  video.currentTime = 0;
+  video.play().catch(() => { /* autoplay may be blocked; user can press play */ });
+}
+function closeSignupVideo(markSeen = true) {
+  videoModal.classList.add("hidden");
+  video.pause();
+  if (markSeen) localStorage.setItem(SEEN_KEY, "1");
+}
+// If the video file hasn't been added yet (404 or decode error), show a
+// friendly fallback instead of a broken player, so login is never blocked.
+video.addEventListener("error", () => {
+  video.classList.add("hidden");
+  videoFallback.classList.remove("hidden");
+});
+document.getElementById("signup-video-skip").onclick = () => closeSignupVideo(true);
+document.getElementById("signup-video-continue").onclick = () => closeSignupVideo(true);
+document.getElementById("signup-video-replay").onclick = () => openSignupVideo();
+video.addEventListener("ended", () => closeSignupVideo(true));
+
+// Auto-play for first-time visitors only; anyone can replay it later via the link above.
+if (!localStorage.getItem(SEEN_KEY)) openSignupVideo();
+
+document.getElementById("login-form").onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const { user } = await api("/api/login", {
+      method: "POST",
+      body: { identifier: document.getElementById("identifier").value, password: document.getElementById("password").value }
+    });
+    toast(`Welcome back, ${user.name.split(" ")[0]}!`);
+    const next = new URLSearchParams(location.search).get("next");
+    setTimeout(() => {
+      if (next) location.href = next;
+      else if (user.role === "admin") location.href = "/admin-dashboard.html";
+      else if (user.role === "seller") location.href = "/seller-dashboard.html";
+      else location.href = "/index.html";
+    }, 500);
+  } catch (err) { toast(err.message, "error"); }
+};
+</script>
+</body>
+</html>

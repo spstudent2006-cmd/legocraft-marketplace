@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-3xl mx-auto px-4 md:px-8 py-8">
+  <h1 class="font-display text-3xl text-primary mb-6" data-i18n="orders.title">My Orders</h1>
+  <div id="orders" class="flex flex-col gap-4"></div>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+const statusColor = { placed: "bg-secondary-container text-on-secondary-container", shipped: "bg-primary-container text-on-primary-container", delivered: "bg-success text-white", cancelled: "bg-error-container text-error" };
+
+async function load() {
+  const wrap = document.getElementById("orders");
+  try {
+    const { orders } = await api("/api/orders");
+    if (orders.length === 0) {
+      wrap.innerHTML = `<p class="text-on-surface-variant py-12 text-center">${t("common.noOrdersYet")} <a href="/products.html" class="text-secondary hover:underline">${t("orders.browse")}</a></p>`;
+      return;
+    }
+    wrap.innerHTML = orders.map(o => `
+      <div class="border border-surface-container rounded-lg p-4">
+        <div class="flex justify-between text-sm text-on-surface-variant mb-2">
+          <span>${t("orders.order")}${o.id}</span>
+          <span>${new Date(o.createdAt).toLocaleDateString()}</span>
+        </div>
+        ${o.items.map(it => `
+          <div class="flex justify-between items-center text-sm py-1">
+            <span>${escapeHtml(it.title)} × ${it.qty}</span>
+            <span class="flex items-center gap-2">
+              ₹${it.price * it.qty}
+              <span class="text-xs px-2 py-0.5 rounded-full ${statusColor[it.status] || ""}">${it.status}</span>
+            </span>
+          </div>`).join("")}
+        <div class="flex justify-between font-semibold pt-2 mt-2 border-t border-surface-container">
+          <span>${t("common.total")}</span><span class="text-primary">₹${o.total}</span>
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    if (e.message.toLowerCase().includes("log in")) {
+      wrap.innerHTML = `<p class="text-on-surface-variant py-12 text-center">${t("orders.loginPrompt")} <a href="/login.html?next=/orders.html" class="text-secondary underline">${t("orders.loginToView")}</a> ${t("orders.toSeeOrders")}</p>`;
+    } else {
+      wrap.innerHTML = `<p class="text-error">${e.message}</p>`;
+    }
+  }
+}
+load();
+document.addEventListener("lc-lang-changed", load);
+</script>
+</body>
+</html>

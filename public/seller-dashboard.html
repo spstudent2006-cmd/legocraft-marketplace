@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Dashboard | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-5xl mx-auto px-4 md:px-8 py-8">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <h1 class="font-display text-3xl text-primary" data-i18n="seller.title">Seller Dashboard</h1>
+    <button id="add-product-btn" class="bg-primary text-on-primary font-medium px-5 py-2.5 rounded hover:bg-primary-container transition-colors" data-i18n="seller.addProduct">+ Add Product</button>
+  </div>
+
+  <div class="flex gap-6 border-b border-surface-container mb-6 font-body text-sm">
+    <button data-tab="products" class="tab-btn py-3 border-b-2 border-primary text-primary font-medium" data-i18n="seller.myProducts">My Products</button>
+    <button data-tab="orders" class="tab-btn py-3 border-b-2 border-transparent text-on-surface-variant" data-i18n="seller.orders">Orders</button>
+  </div>
+
+  <div id="panel-products">
+    <div id="product-list" class="grid md:grid-cols-2 gap-4"></div>
+  </div>
+
+  <div id="panel-orders" class="hidden">
+    <div id="order-list" class="flex flex-col gap-4"></div>
+  </div>
+</main>
+
+<!-- Add/Edit product modal -->
+<div id="product-modal" class="hidden fixed inset-0 z-[100] bg-on-surface/50 backdrop-blur-sm items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+  <div class="bg-surface-container-lowest rounded-none sm:rounded-lg max-w-md w-full p-6 min-h-screen sm:min-h-0 sm:max-h-[90vh] overflow-y-auto">
+    <h2 class="font-display text-xl text-primary mb-4" data-i18n="seller.addProduct">Add Product</h2>
+
+    <div class="mb-3 border border-outline-variant rounded-lg p-3 bg-surface-container-low">
+      <div class="flex items-center justify-between gap-2">
+        <button type="button" id="voice-btn" class="flex items-center gap-2 text-sm font-medium text-secondary">
+          <span id="voice-btn-icon" class="material-symbols-outlined">mic</span>
+          <span id="voice-btn-label" data-i18n="seller.speakDetails">Speak product details</span>
+        </button>
+        <select id="voice-lang" class="border border-outline-variant rounded px-2 py-1 text-xs">
+          <option value="en-IN" data-label="English">English</option>
+          <option value="hi-IN" data-label="Hindi">हिंदी (Hindi)</option>
+          <option value="bn-IN" data-label="Bengali">বাংলা (Bengali)</option>
+          <option value="mr-IN" data-label="Marathi">मराठी (Marathi)</option>
+          <option value="gu-IN" data-label="Gujarati">ગુજરાતી (Gujarati)</option>
+          <option value="ta-IN" data-label="Tamil">தமிழ் (Tamil)</option>
+          <option value="te-IN" data-label="Telugu">తెలుగు (Telugu)</option>
+          <option value="kn-IN" data-label="Kannada">ಕನ್ನಡ (Kannada)</option>
+          <option value="ml-IN" data-label="Malayalam">മലയാളം (Malayalam)</option>
+          <option value="pa-IN" data-label="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+        </select>
+      </div>
+      <p class="text-xs text-on-surface-variant mt-1">Pick your language, tap the mic, and describe the product out loud - e.g. "A handmade teak wood elephant, ₹850, 5 in stock, traditional style, good as a gift." We'll convert your voice to text and fill in the form in English &amp; Hindi.</p>
+      <p id="voice-status" class="text-xs mt-1"></p>
+      <p id="voice-transcript" class="text-xs italic text-on-surface-variant mt-1"></p>
+    </div>
+
+    <form id="product-form" class="flex flex-col gap-3">
+      <input type="hidden" id="p-id">
+      <input type="hidden" id="p-title-hi">
+      <div>
+        <label class="block text-sm font-medium mb-1" data-i18n="seller.title.field">Title</label>
+        <input id="p-title" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <div class="flex items-center justify-between">
+          <label class="block text-sm font-medium mb-1" data-i18n="seller.description">Description</label>
+          <button type="button" id="toggle-desc-hi" class="hidden text-xs text-secondary hover:underline mb-1">देखें हिंदी में</button>
+        </div>
+        <textarea id="p-description" required rows="3" class="w-full border border-outline-variant rounded px-3 py-2 text-sm"></textarea>
+        <textarea id="p-description-hi" rows="3" placeholder="हिंदी विवरण (आवाज़ से अपने आप बनेगा)" class="hidden w-full border border-outline-variant rounded px-3 py-2 text-sm mt-2"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1" data-i18n="seller.category">Category</label>
+          <input id="p-category" list="category-options" required minlength="3" placeholder="e.g. Pottery" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+          <datalist id="category-options"></datalist>
+          <p class="text-xs text-on-surface-variant mt-1">Pick an existing category or type a new one (min 3 characters).</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Price (₹)</label>
+          <input id="p-price" type="number" min="0" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+          <button type="button" id="price-btn" class="mt-1 text-xs text-secondary hover:underline">💡 Suggest price with AI</button>
+        </div>
+      </div>
+      <p id="price-status" class="text-xs -mt-2"></p>
+      <div>
+        <label class="block text-sm font-medium mb-1" data-i18n="seller.stock">Stock</label>
+        <input id="p-stock" type="number" min="0" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1"><span data-i18n="seller.productImages">Product Images</span> <span class="font-normal text-on-surface-variant">(up to 6, swipeable on the product page)</span></label>
+        <input id="p-images" type="file" accept="image/*" multiple class="w-full text-sm">
+        <div id="p-image-previews" class="flex flex-wrap gap-2 mt-2"></div>
+        <button type="button" id="analyze-btn" class="mt-2 text-xs text-secondary hover:underline">✨ Analyze with AI (auto-fill title &amp; description)</button>
+        <p id="analyze-status" class="text-xs text-on-surface-variant mt-1"></p>
+      </div>
+
+      <div class="border-t border-surface-container pt-3 mt-1">
+        <p class="text-xs font-medium text-on-surface-variant mb-2">Used by the "Build Your Craft" puzzle to recommend this product</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Material</label>
+            <select id="p-material" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+              <option>Wood</option><option>Clay</option><option>Fabric</option><option>Metal</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Style</label>
+            <select id="p-style" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+              <option>Simple</option><option>Colourful</option><option>Traditional</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm font-medium mb-1">Purpose (select any that apply)</label>
+          <div class="flex flex-wrap gap-3 text-sm">
+            <label class="flex items-center gap-1"><input type="checkbox" class="p-purpose" value="Gift"> Gift</label>
+            <label class="flex items-center gap-1"><input type="checkbox" class="p-purpose" value="Home Decor"> Home Decor</label>
+            <label class="flex items-center gap-1"><input type="checkbox" class="p-purpose" value="Personal Use"> Personal Use</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-2">
+        <button type="button" id="cancel-modal" class="flex-1 border border-outline-variant rounded py-2.5 text-sm" data-i18n="common.cancel">Cancel</button>
+        <button class="flex-1 bg-primary text-on-primary rounded py-2.5 text-sm font-medium" data-i18n="common.save">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+let currentUser = null;
+
+async function guard() {
+  const { user } = await api("/api/me");
+  if (!user || user.role !== "seller") { location.href = "/login.html?next=/seller-dashboard.html"; return false; }
+  currentUser = user;
+  return true;
+}
+
+/* ---- Tabs ---- */
+document.querySelectorAll(".tab-btn").forEach(btn => btn.onclick = () => {
+  document.querySelectorAll(".tab-btn").forEach(b => b.className = "tab-btn py-3 border-b-2 border-transparent text-on-surface-variant");
+  btn.className = "tab-btn py-3 border-b-2 border-primary text-primary font-medium";
+  document.getElementById("panel-products").classList.toggle("hidden", btn.dataset.tab !== "products");
+  document.getElementById("panel-orders").classList.toggle("hidden", btn.dataset.tab !== "orders");
+  if (btn.dataset.tab === "orders") loadOrders();
+});
+
+/* ---- Products ---- */
+async function loadProducts() {
+  const { products } = await api("/api/seller/products");
+  const list = document.getElementById("product-list");
+  const active = products.filter(p => p.status === "active");
+  list.innerHTML = active.map(p => `
+    <div class="border border-surface-container rounded-lg p-4 flex gap-4">
+      <div class="w-20 h-20 rounded overflow-hidden bg-surface-container-low shrink-0">
+        ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'><span class=\\'material-symbols-outlined text-outline\\'>image</span></div>'">` : `<div class="w-full h-full flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>`}
+      </div>
+      <div class="flex-1">
+        <p class="font-body text-sm font-medium">${escapeHtml(p.title)}</p>
+        <p class="text-xs text-on-surface-variant">${escapeHtml(p.category)} • Stock: ${p.stock}</p>
+        <p class="text-primary font-semibold">₹${p.price}</p>
+        <div class="flex gap-3 mt-2 text-xs">
+          <button data-edit="${p.id}" class="text-secondary hover:underline">${t("common.edit")}</button>
+          <button data-delete="${p.id}" class="text-error hover:underline">${t("common.remove")}</button>
+        </div>
+      </div>
+    </div>`).join("") || `<p class="text-on-surface-variant col-span-2 py-8 text-center">No products yet. Click "+ Add Product" to list your first item.</p>`;
+
+  list.querySelectorAll("[data-edit]").forEach(btn => btn.onclick = () => openModal(active.find(p => p.id === btn.dataset.edit)));
+  list.querySelectorAll("[data-delete]").forEach(btn => btn.onclick = async () => {
+    if (!confirm("Remove this product from your shop?")) return;
+    await api(`/api/seller/products/${btn.dataset.delete}`, { method: "DELETE" });
+    toast("Product removed");
+    loadProducts();
+  });
+}
+
+/* ---- Image picker (multiple images, existing + newly chosen, each removable) ---- */
+const MAX_IMAGES = 6;
+let existingImages = [];
+let newImageFiles = [];
+let enhancingIndex = null; // index into newImageFiles currently being enhanced, for spinner state
+
+function renderImagePreviews() {
+  const wrap = document.getElementById("p-image-previews");
+  const existingHtml = existingImages.map((url, i) => `
+    <div class="relative w-16 h-16 rounded overflow-hidden border border-outline-variant shrink-0">
+      <img src="${url}" class="w-full h-full object-cover">
+      <button type="button" data-remove-existing="${i}" class="absolute top-0.5 right-0.5 bg-on-surface/70 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center leading-none">×</button>
+    </div>`).join("");
+  const newHtml = newImageFiles.map((f, i) => `
+    <div class="flex flex-col items-center gap-1">
+      <div class="relative w-16 h-16 rounded overflow-hidden border border-outline-variant shrink-0">
+        <img src="${URL.createObjectURL(f)}" class="w-full h-full object-cover">
+        <button type="button" data-remove-new="${i}" class="absolute top-0.5 right-0.5 bg-on-surface/70 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center leading-none">×</button>
+      </div>
+      <button type="button" data-enhance="${i}" class="text-[10px] text-secondary hover:underline leading-none" ${enhancingIndex === i ? "disabled" : ""}>${enhancingIndex === i ? "Removing…" : "✨ White BG"}</button>
+    </div>`).join("");
+  wrap.innerHTML = existingHtml + newHtml;
+
+  wrap.querySelectorAll("[data-remove-existing]").forEach(btn => btn.onclick = () => {
+    existingImages.splice(Number(btn.dataset.removeExisting), 1);
+    renderImagePreviews();
+  });
+  wrap.querySelectorAll("[data-remove-new]").forEach(btn => btn.onclick = () => {
+    newImageFiles.splice(Number(btn.dataset.removeNew), 1);
+    renderImagePreviews();
+  });
+  wrap.querySelectorAll("[data-enhance]").forEach(btn => btn.onclick = () => enhanceImage(Number(btn.dataset.enhance)));
+}
+
+/* AI Background Remover: sends a newly-picked photo to the server, which
+   asks Gemini's image model to remove the existing background and replace
+   it with a solid white one, leaving the product itself untouched. The
+   result replaces the original in the picker (it's already saved
+   server-side as an uploaded file, so it moves from newImageFiles into
+   existingImages). */
+async function enhanceImage(index) {
+  const file = newImageFiles[index];
+  if (!file) return;
+  enhancingIndex = index;
+  renderImagePreviews();
+  const fd = new FormData();
+  fd.append("image", file);
+  try {
+    const { url } = await api("/api/seller/enhance-image", { method: "POST", body: fd, isForm: true });
+    newImageFiles.splice(index, 1);
+    existingImages.push(url);
+    toast("Background removed - now white");
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    enhancingIndex = null;
+    renderImagePreviews();
+  }
+}
+
+document.getElementById("p-images").onchange = (e) => {
+  const chosen = Array.from(e.target.files || []);
+  const room = Math.max(0, MAX_IMAGES - existingImages.length - newImageFiles.length);
+  if (chosen.length > room) toast(`You can add up to ${MAX_IMAGES} images per product.`, "error");
+  newImageFiles.push(...chosen.slice(0, room));
+  e.target.value = ""; // allow re-selecting the same file, and keeps input from holding a stale FileList
+  renderImagePreviews();
+};
+
+function openModal(product = null) {
+  document.getElementById("product-modal").classList.remove("hidden");
+  document.getElementById("product-modal").classList.add("flex");
+  document.getElementById("product-form").reset();
+  document.getElementById("p-id").value = product?.id || "";
+  document.getElementById("p-title").value = product?.title || "";
+  document.getElementById("p-title-hi").value = product?.titleHi || "";
+  document.getElementById("p-description").value = product?.description || "";
+  document.getElementById("p-description-hi").value = product?.descriptionHi || "";
+  document.getElementById("p-category").value = product?.category || "";
+  document.getElementById("p-price").value = product?.price ?? "";
+  document.getElementById("p-stock").value = product?.stock ?? "";
+  document.getElementById("p-material").value = product?.material || "Wood";
+  document.getElementById("p-style").value = product?.style || "Simple";
+  document.querySelectorAll(".p-purpose").forEach(cb => cb.checked = (product?.purposes || []).includes(cb.value));
+  document.getElementById("analyze-status").textContent = "";
+  document.getElementById("price-status").textContent = "";
+  document.getElementById("toggle-desc-hi").classList.toggle("hidden", !product?.descriptionHi);
+  document.getElementById("p-description-hi").classList.add("hidden");
+  document.getElementById("toggle-desc-hi").textContent = "देखें हिंदी में";
+  existingImages = (product?.images && product.images.length) ? [...product.images] : (product?.image ? [product.image] : []);
+  newImageFiles = [];
+  renderImagePreviews();
+  document.querySelector("#product-modal h2").textContent = product ? t("seller.editProduct") : t("seller.addProduct");
+}
+function closeModal() {
+  document.getElementById("product-modal").classList.add("hidden");
+  document.getElementById("product-modal").classList.remove("flex");
+}
+document.getElementById("add-product-btn").onclick = () => openModal();
+document.getElementById("cancel-modal").onclick = closeModal;
+
+document.getElementById("toggle-desc-hi").onclick = () => {
+  const hiBox = document.getElementById("p-description-hi");
+  const showing = !hiBox.classList.contains("hidden");
+  hiBox.classList.toggle("hidden", showing);
+  document.getElementById("toggle-desc-hi").textContent = showing ? "देखें हिंदी में" : "Show in English";
+};
+
+document.getElementById("product-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("p-id").value;
+  const fd = new FormData();
+  fd.append("title", document.getElementById("p-title").value);
+  fd.append("titleHi", document.getElementById("p-title-hi").value);
+  fd.append("description", document.getElementById("p-description").value);
+  fd.append("descriptionHi", document.getElementById("p-description-hi").value);
+  fd.append("category", document.getElementById("p-category").value);
+  fd.append("price", document.getElementById("p-price").value);
+  fd.append("stock", document.getElementById("p-stock").value);
+  fd.append("material", document.getElementById("p-material").value);
+  fd.append("style", document.getElementById("p-style").value);
+  const purposes = [...document.querySelectorAll(".p-purpose:checked")].map(cb => cb.value);
+  fd.append("purposes", purposes.join(","));
+  fd.append("existingImages", JSON.stringify(existingImages));
+  newImageFiles.forEach(file => fd.append("images", file));
+
+  try {
+    if (id) await api(`/api/seller/products/${id}`, { method: "PUT", body: fd, isForm: true });
+    else await api("/api/seller/products", { method: "POST", body: fd, isForm: true });
+    toast("Product saved");
+    closeModal();
+    loadProducts();
+  } catch (err) { toast(err.message, "error"); }
+};
+
+document.getElementById("analyze-btn").onclick = async () => {
+  const file = newImageFiles[0];
+  const status = document.getElementById("analyze-status");
+  if (!file) { status.textContent = "Choose a new image first (AI analyzes a freshly uploaded photo)."; status.className = "text-xs text-error mt-1"; return; }
+  status.textContent = "Analyzing image…";
+  status.className = "text-xs text-on-surface-variant mt-1";
+  const fd = new FormData();
+  fd.append("image", file);
+  try {
+    const data = await api("/api/seller/analyze-image", { method: "POST", body: fd, isForm: true });
+    if (data.title) document.getElementById("p-title").value = data.title;
+    if (data.description) document.getElementById("p-description").value = data.description;
+    status.textContent = "Suggested by AI - feel free to edit before saving.";
+    status.className = "text-xs text-success mt-1";
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "text-xs text-error mt-1";
+  }
+};
+
+/* ---- Voice input: speech-to-text auto-fill of the whole form ---- */
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognizer = null;
+let isRecording = false;
+
+const voiceBtn = document.getElementById("voice-btn");
+const voiceIcon = document.getElementById("voice-btn-icon");
+const voiceLabel = document.getElementById("voice-btn-label");
+const voiceStatus = document.getElementById("voice-status");
+const voiceTranscriptEl = document.getElementById("voice-transcript");
+
+function setVoiceStatus(msg, cls) {
+  voiceStatus.textContent = msg || "";
+  voiceStatus.className = `text-xs mt-1 ${cls || "text-on-surface-variant"}`;
+}
+
+if (!SpeechRecognitionAPI) {
+  voiceBtn.disabled = true;
+  voiceBtn.classList.add("opacity-50", "cursor-not-allowed");
+  setVoiceStatus("Voice input isn't supported in this browser. Try Chrome on desktop or Android.", "text-error");
+} else {
+  recognizer = new SpeechRecognitionAPI();
+  recognizer.lang = "en-IN";
+  recognizer.interimResults = true;
+  recognizer.continuous = true;
+
+  const voiceLangSelect = document.getElementById("voice-lang");
+  let finalTranscript = "";
+
+  recognizer.onstart = () => {
+    isRecording = true;
+    finalTranscript = "";
+    recognizer.lang = voiceLangSelect.value;
+    voiceIcon.textContent = "stop_circle";
+    voiceLabel.textContent = "Listening… tap to stop";
+    voiceBtn.classList.add("text-error");
+    voiceTranscriptEl.textContent = "";
+    setVoiceStatus("Listening…");
+  };
+
+  recognizer.onresult = (e) => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const chunk = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalTranscript += chunk + " ";
+      else interim += chunk;
+    }
+    voiceTranscriptEl.textContent = (finalTranscript + interim).trim();
+  };
+
+  recognizer.onerror = (e) => {
+    setVoiceStatus(e.error === "not-allowed" ? "Microphone access was blocked. Please allow it and try again." : `Voice input error: ${e.error}`, "text-error");
+  };
+
+  recognizer.onend = async () => {
+    isRecording = false;
+    voiceIcon.textContent = "mic";
+    voiceLabel.textContent = "Speak product details";
+    voiceBtn.classList.remove("text-error");
+    const transcript = finalTranscript.trim();
+    if (!transcript) {
+      setVoiceStatus("Didn't catch any speech - please try again.", "text-error");
+      return;
+    }
+    voiceTranscriptEl.textContent = transcript;
+    setVoiceStatus("Converting speech to product details…");
+    try {
+      const spokenLanguageLabel = voiceLangSelect.selectedOptions[0]?.dataset.label || "English";
+      const data = await api("/api/seller/analyze-voice", { method: "POST", body: { transcript, language: spokenLanguageLabel } });
+      if (data.title) document.getElementById("p-title").value = data.title;
+      if (data.titleHi) document.getElementById("p-title-hi").value = data.titleHi;
+      if (data.description) document.getElementById("p-description").value = data.description;
+      if (data.descriptionHi) {
+        document.getElementById("p-description-hi").value = data.descriptionHi;
+        document.getElementById("toggle-desc-hi").classList.remove("hidden");
+      }
+      if (data.category) document.getElementById("p-category").value = data.category;
+      if (data.price !== null && data.price !== undefined && data.price !== "") document.getElementById("p-price").value = data.price;
+      if (data.stock !== null && data.stock !== undefined && data.stock !== "") document.getElementById("p-stock").value = data.stock;
+      if (data.material) document.getElementById("p-material").value = data.material;
+      if (data.style) document.getElementById("p-style").value = data.style;
+      if (Array.isArray(data.purposes)) {
+        document.querySelectorAll(".p-purpose").forEach(cb => cb.checked = data.purposes.includes(cb.value));
+      }
+      setVoiceStatus("Filled in from your voice (English + Hindi) - please review before saving.", "text-success");
+    } catch (err) {
+      setVoiceStatus(err.message, "text-error");
+    }
+  };
+
+  voiceBtn.onclick = () => {
+    if (isRecording) recognizer.stop();
+    else {
+      try { recognizer.start(); }
+      catch { setVoiceStatus("Could not start the microphone. Please try again.", "text-error"); }
+    }
+  };
+}
+
+/* ---- Dynamic Pricing Assistant: AI-suggested competitive price ---- */
+document.getElementById("price-btn").onclick = async () => {
+  const status = document.getElementById("price-status");
+  const title = document.getElementById("p-title").value;
+  const description = document.getElementById("p-description").value;
+  const category = document.getElementById("p-category").value;
+  if (!title && !description && !category) {
+    status.textContent = "Add a title, description or category first so the AI has something to price.";
+    status.className = "text-xs -mt-2 text-error";
+    return;
+  }
+  status.textContent = "Checking market prices…";
+  status.className = "text-xs -mt-2 text-on-surface-variant";
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("description", description);
+  fd.append("category", category);
+  fd.append("material", document.getElementById("p-material").value);
+  fd.append("style", document.getElementById("p-style").value);
+  const firstImage = newImageFiles[0];
+  if (firstImage) fd.append("image", firstImage);
+  try {
+    const data = await api("/api/seller/suggest-price", { method: "POST", body: fd, isForm: true });
+    if (data.suggestedPrice !== undefined && data.suggestedPrice !== null) {
+      document.getElementById("p-price").value = Math.round(data.suggestedPrice);
+    }
+    const range = (data.priceMin && data.priceMax) ? ` (typical range ₹${Math.round(data.priceMin)}–₹${Math.round(data.priceMax)})` : "";
+    status.textContent = `Suggested ₹${Math.round(data.suggestedPrice)}${range}. ${data.reasoning || ""}`;
+    status.className = "text-xs -mt-2 text-success";
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "text-xs -mt-2 text-error";
+  }
+};
+
+/* ---- Orders ---- */
+async function loadOrders() {
+  const { orders } = await api("/api/seller/orders");
+  const list = document.getElementById("order-list");
+  list.innerHTML = orders.map(o => `
+    <div class="border border-surface-container rounded-lg p-4">
+      <div class="flex flex-wrap gap-1 justify-between text-sm text-on-surface-variant mb-2">
+        <span>Order #${o.id} • ${escapeHtml(o.buyerName)}</span>
+        <span>${new Date(o.createdAt).toLocaleDateString()}</span>
+      </div>
+      ${o.items.map(it => `
+        <div class="flex justify-between items-center text-sm py-1">
+          <span>${escapeHtml(it.title)} × ${it.qty}</span>
+          <select data-order="${o.id}" data-product="${it.productId}" class="status-select border border-outline-variant rounded px-2 py-1 text-xs">
+            ${["placed", "shipped", "delivered", "cancelled"].map(s => `<option value="${s}" ${s === it.status ? "selected" : ""}>${s}</option>`).join("")}
+          </select>
+        </div>`).join("")}
+    </div>`).join("") || `<p class="text-on-surface-variant py-8 text-center">${t("seller.noOrdersYet")}</p>`;
+
+  list.querySelectorAll(".status-select").forEach(sel => sel.onchange = async () => {
+    try {
+      await api(`/api/seller/orders/${sel.dataset.order}/items/${sel.dataset.product}/status`, { method: "PUT", body: { status: sel.value } });
+      toast("Order status updated");
+    } catch (err) { toast(err.message, "error"); }
+  });
+}
+
+(async () => {
+  if (await guard()) {
+    loadProducts();
+    api("/api/categories").then(({ categories }) => {
+      document.getElementById("category-options").innerHTML = categories.map(c => `<option value="${c}">`).join("");
+    });
+  }
+})();
+document.addEventListener("lc-lang-changed", () => {
+  loadProducts();
+  if (!document.getElementById("panel-orders").classList.contains("hidden")) loadOrders();
+});
+</script>
+</body>
+</html>

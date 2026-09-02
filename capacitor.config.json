@@ -1,0 +1,9 @@
+{
+  "appId": "com.legocraft.marketplace",
+  "appName": "LEGOCRAFT",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}

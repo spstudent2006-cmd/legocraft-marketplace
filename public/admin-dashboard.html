@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-6xl mx-auto px-4 md:px-8 py-8">
+  <h1 class="font-display text-3xl text-primary mb-6" data-i18n="admin.title">Admin Dashboard</h1>
+
+  <div id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+  <div class="flex gap-6 border-b border-surface-container mb-6 font-body text-sm overflow-x-auto">
+    <button data-tab="users" class="tab-btn py-3 border-b-2 border-primary text-primary font-medium whitespace-nowrap" data-i18n="admin.tabUsers">Users</button>
+    <button data-tab="products" class="tab-btn py-3 border-b-2 border-transparent text-on-surface-variant whitespace-nowrap" data-i18n="admin.tabProducts">Products</button>
+    <button data-tab="orders" class="tab-btn py-3 border-b-2 border-transparent text-on-surface-variant whitespace-nowrap" data-i18n="admin.tabOrders">Orders</button>
+    <button data-tab="categories" class="tab-btn py-3 border-b-2 border-transparent text-on-surface-variant whitespace-nowrap" data-i18n="admin.tabCategories">Categories</button>
+  </div>
+
+  <div id="panel-users"><div id="user-list" class="flex flex-col gap-2"></div></div>
+  <div id="panel-products" class="hidden"><div id="product-list" class="flex flex-col gap-2"></div></div>
+  <div id="panel-orders" class="hidden"><div id="order-list" class="flex flex-col gap-4"></div></div>
+  <div id="panel-categories" class="hidden">
+    <p class="text-sm text-on-surface-variant mb-3" data-i18n="admin.categoryHint">Categories with 0 active products can be deleted — useful for cleaning up typos like a stray "C".</p>
+    <div id="category-list" class="flex flex-col gap-2"></div>
+  </div>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+async function guard() {
+  const { user } = await api("/api/me");
+  if (!user || user.role !== "admin") { location.href = "/login.html?next=/admin-dashboard.html"; return false; }
+  return true;
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn => btn.onclick = () => {
+  document.querySelectorAll(".tab-btn").forEach(b => b.className = "tab-btn py-3 border-b-2 border-transparent text-on-surface-variant whitespace-nowrap");
+  btn.className = "tab-btn py-3 border-b-2 border-primary text-primary font-medium whitespace-nowrap";
+  ["users", "products", "orders", "categories"].forEach(t => document.getElementById(`panel-${t}`).classList.toggle("hidden", t !== btn.dataset.tab));
+  if (btn.dataset.tab === "products") loadProducts();
+  if (btn.dataset.tab === "orders") loadOrders();
+  if (btn.dataset.tab === "categories") loadCategories();
+});
+
+async function loadStats() {
+  const s = await api("/api/admin/stats");
+  document.getElementById("stats").innerHTML = `
+    ${statCard(t("admin.buyers"), s.totalBuyers)}
+    ${statCard(t("admin.sellers"), s.totalSellers)}
+    ${statCard(t("admin.activeProducts"), s.totalProducts)}
+    ${statCard(t("admin.orders"), s.totalOrders)}
+  `;
+}
+function statCard(label, value) {
+  return `<div class="border border-surface-container rounded-lg p-4 text-center">
+    <p class="font-display text-2xl text-primary">${value}</p>
+    <p class="text-xs text-on-surface-variant mt-1">${label}</p>
+  </div>`;
+}
+
+async function loadUsers() {
+  const { users } = await api("/api/admin/users");
+  document.getElementById("user-list").innerHTML = users.map(u => `
+    <div class="flex flex-wrap items-center justify-between gap-2 border border-surface-container rounded-lg p-3 text-sm">
+      <div>
+        <p class="font-medium">${escapeHtml(u.name)} <span class="text-xs text-on-surface-variant">(${escapeHtml(u.role)}${u.shopName ? " • " + escapeHtml(u.shopName) : ""})</span></p>
+        <p class="text-xs text-on-surface-variant">${escapeHtml(u.email)}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs px-2 py-0.5 rounded-full ${u.status === "active" ? "bg-success/20 text-success" : "bg-error-container text-error"}">${u.status}</span>
+        <button data-toggle="${u.id}" data-status="${u.status}" class="text-secondary hover:underline text-xs">${u.status === "active" ? t("common.ban") : t("common.unban")}</button>
+      </div>
+    </div>`).join("");
+
+  document.querySelectorAll("[data-toggle]").forEach(btn => btn.onclick = async () => {
+    const newStatus = btn.dataset.status === "active" ? "banned" : "active";
+    await api(`/api/admin/users/${btn.dataset.toggle}/status`, { method: "PUT", body: { status: newStatus } });
+    toast(`User ${newStatus === "banned" ? "banned" : "unbanned"}`);
+    loadUsers();
+  });
+}
+
+async function loadProducts() {
+  const { products } = await api("/api/admin/products");
+  const active = products.filter(p => p.status === "active");
+  document.getElementById("product-list").innerHTML = active.map(p => `
+    <div class="flex flex-wrap items-center justify-between gap-2 border border-surface-container rounded-lg p-3 text-sm">
+      <div>
+        <p class="font-medium">${escapeHtml(p.title)}</p>
+        <p class="text-xs text-on-surface-variant">${escapeHtml(p.category)} • ${escapeHtml(p.shopName)} • ₹${p.price} • Stock ${p.stock}</p>
+      </div>
+      <button data-remove="${p.id}" class="text-error hover:underline text-xs">${t("common.remove")}</button>
+    </div>`).join("") || `<p class="text-on-surface-variant py-8 text-center">${t("admin.noProducts")}</p>`;
+
+  document.querySelectorAll("[data-remove]").forEach(btn => btn.onclick = async () => {
+    if (!confirm("Remove this listing from the marketplace?")) return;
+    await api(`/api/admin/products/${btn.dataset.remove}`, { method: "DELETE" });
+    toast("Product removed");
+    loadProducts();
+  });
+}
+
+async function loadOrders() {
+  const { orders } = await api("/api/admin/orders");
+  document.getElementById("order-list").innerHTML = orders.map(o => `
+    <div class="border border-surface-container rounded-lg p-4">
+      <div class="flex flex-wrap gap-1 justify-between text-sm text-on-surface-variant mb-2">
+        <span>Order #${o.id} • ${escapeHtml(o.buyerName)}</span>
+        <span>${new Date(o.createdAt).toLocaleDateString()}</span>
+      </div>
+      ${o.items.map(it => `<div class="flex justify-between text-sm py-0.5"><span>${escapeHtml(it.title)} × ${it.qty}</span><span>${escapeHtml(it.status)}</span></div>`).join("")}
+      <div class="flex justify-between font-semibold pt-2 mt-2 border-t border-surface-container">
+        <span>${t("common.total")}</span><span class="text-primary">₹${o.total}</span>
+      </div>
+    </div>`).join("") || `<p class="text-on-surface-variant py-8 text-center">${t("admin.noOrders")}</p>`;
+}
+
+async function loadCategories() {
+  const { categories } = await api("/api/admin/categories");
+  document.getElementById("category-list").innerHTML = categories.map(c => `
+    <div class="flex flex-wrap items-center justify-between gap-2 border border-surface-container rounded-lg p-3 text-sm">
+      <div>
+        <p class="font-medium">${escapeHtml(c.name)}</p>
+        <p class="text-xs text-on-surface-variant">${c.productCount} active product${c.productCount === 1 ? "" : "s"}</p>
+      </div>
+      ${c.productCount === 0
+        ? `<button data-del-cat="${encodeURIComponent(c.name)}" class="text-error hover:underline text-xs">${t("common.delete")}</button>`
+        : `<span class="text-xs text-on-surface-variant">${t("common.inUse")}</span>`}
+    </div>`).join("") || `<p class="text-on-surface-variant py-8 text-center">${t("common.noCategories")}</p>`;
+
+  document.querySelectorAll("[data-del-cat]").forEach(btn => btn.onclick = async () => {
+    if (!confirm("Delete this category?")) return;
+    try {
+      await api(`/api/admin/categories/${btn.dataset.delCat}`, { method: "DELETE" });
+      toast("Category deleted");
+      loadCategories();
+    } catch (err) { toast(err.message, "error"); }
+  });
+}
+
+(async () => {
+  if (await guard()) { loadStats(); loadUsers(); }
+})();
+document.addEventListener("lc-lang-changed", () => {
+  loadStats();
+  const activeTab = document.querySelector(".tab-btn.text-primary")?.dataset.tab || "users";
+  if (activeTab === "users") loadUsers();
+  if (activeTab === "products") loadProducts();
+  if (activeTab === "orders") loadOrders();
+  if (activeTab === "categories") loadCategories();
+});
+</script>
+</body>
+</html>

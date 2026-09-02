@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your Craft | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-2xl mx-auto px-4 md:px-8 py-10">
+  <div class="text-center mb-8">
+    <p class="text-4xl mb-2">🧩</p>
+    <h1 class="font-display text-3xl text-primary" data-i18n="puzzle.title">Build Your Craft</h1>
+    <p class="text-on-surface-variant mt-2" data-i18n="puzzle.subtitle">Not sure what to buy? Answer three quick questions and we'll find a handmade piece for you.</p>
+  </div>
+
+  <!-- Chat-style transcript -->
+  <div id="chat" class="flex flex-col gap-4 mb-8"></div>
+
+  <!-- Result -->
+  <div id="result" class="hidden">
+    <div id="result-grid" class="grid grid-cols-2 md:grid-cols-3 gap-5 mt-4"></div>
+    <button id="restart-btn" class="mt-8 text-secondary hover:underline text-sm" data-i18n="puzzle.startOver">↺ Start over</button>
+  </div>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+const steps = [
+  { key: "material", questionKey: "puzzle.q1", options: [
+    { label: "Wood", labelKey: "puzzle.wood", emoji: "🪵" }, { label: "Clay", labelKey: "puzzle.clay", emoji: "🏺" }, { label: "Fabric", labelKey: "puzzle.fabric", emoji: "🧵" }
+  ]},
+  { key: "style", questionKey: "puzzle.q2", options: [
+    { label: "Simple", labelKey: "puzzle.simple", emoji: "🌿" }, { label: "Colourful", labelKey: "puzzle.colourful", emoji: "🎨" }, { label: "Traditional", labelKey: "puzzle.traditional", emoji: "🪔" }
+  ]},
+  { key: "purpose", questionKey: "puzzle.q3", options: [
+    { label: "Gift", labelKey: "puzzle.gift", emoji: "🎁" }, { label: "Home Decor", labelKey: "puzzle.homeDecor", emoji: "🏠" }, { label: "Personal Use", labelKey: "puzzle.personalUse", emoji: "📚" }
+  ]}
+];
+
+const answers = {};
+let stepIndex = 0;
+const chat = document.getElementById("chat");
+
+function bubble(from, html) {
+  const isApp = from === "app";
+  const div = document.createElement("div");
+  div.className = `max-w-[85%] px-4 py-3 rounded-2xl text-sm ${isApp ? "bg-surface-container-low self-start rounded-tl-sm" : "bg-primary text-on-primary self-end rounded-tr-sm ml-auto"}`;
+  div.innerHTML = html;
+  chat.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function askStep() {
+  if (stepIndex >= steps.length) return finish();
+  const step = steps[stepIndex];
+  bubble("app", t(step.questionKey));
+  const optWrap = document.createElement("div");
+  optWrap.className = "flex flex-wrap gap-2";
+  step.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "border border-outline-variant rounded-full px-4 py-2 text-sm hover:border-primary hover:bg-surface-container-low transition-colors";
+    btn.innerHTML = `${opt.emoji} ${t(opt.labelKey)}`;
+    btn.onclick = () => {
+      optWrap.remove();
+      bubble("user", `${opt.emoji} ${t(opt.labelKey)}`);
+      answers[step.key] = opt.label;
+      stepIndex++;
+      setTimeout(askStep, 300);
+    };
+    optWrap.appendChild(btn);
+  });
+  chat.appendChild(optWrap);
+}
+
+async function finish() {
+  bubble("app", t("puzzle.finding"));
+  try {
+    const { summary, products } = await api("/api/puzzle", { method: "POST", body: answers });
+    bubble("app", summary);
+    const grid = document.getElementById("result-grid");
+    grid.innerHTML = products.map(p => {
+      const placeholderHtml = `<div class=\"w-full h-full bg-surface-container-high flex items-center justify-center\"><span class=\"material-symbols-outlined text-outline\">image</span></div>`;
+      const img = p.image ? `<img src="${p.image}" class="w-full h-full object-cover" alt="${escapeHtml(p.title)}" onerror="this.outerHTML='${placeholderHtml.replace(/'/g, "\\'")}'">` : placeholderHtml;
+      return `<a href="/product.html?id=${p.id}" class="block group">
+        <div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low">${img}</div>
+        <p class="mt-2 text-sm line-clamp-2 group-hover:text-primary">${escapeHtml(p.title)}</p>
+        <p class="text-primary font-semibold">₹${p.price}</p>
+      </a>`;
+    }).join("");
+    document.getElementById("result").classList.remove("hidden");
+  } catch (e) {
+    bubble("app", `${t("puzzle.error")} ${e.message}`);
+  }
+}
+
+document.getElementById("restart-btn").onclick = () => location.reload();
+
+askStep();
+</script>
+</body>
+</html>

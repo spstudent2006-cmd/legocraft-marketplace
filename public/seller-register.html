@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sell on Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-3xl mx-auto px-4 md:px-8 py-12 text-center">
+  <h1 class="font-display text-4xl text-primary mb-4" data-i18n="sellerRegister.title">Turn Your Craft Into an Online Business</h1>
+  <p class="text-on-surface-variant max-w-xl mx-auto mb-8" data-i18n="sellerRegister.subtitle">List your products, reach buyers across the country, and manage your orders — all from one seller dashboard. No commission on your first 90 days.</p>
+
+  <div class="grid md:grid-cols-3 gap-6 mb-10 text-left">
+    <div class="p-5 border border-surface-container rounded-lg">
+      <span class="material-symbols-outlined text-secondary text-[28px]">storefront</span>
+      <p class="font-display text-lg mt-2" data-i18n="sellerRegister.f1.title">Your Own Shop</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="sellerRegister.f1.desc">List unlimited products under your own shop name.</p>
+    </div>
+    <div class="p-5 border border-surface-container rounded-lg">
+      <span class="material-symbols-outlined text-secondary text-[28px]">dashboard</span>
+      <p class="font-display text-lg mt-2" data-i18n="sellerRegister.f2.title">Simple Dashboard</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="sellerRegister.f2.desc">Track orders and update stock in real time.</p>
+    </div>
+    <div class="p-5 border border-surface-container rounded-lg">
+      <span class="material-symbols-outlined text-secondary text-[28px]">account_balance_wallet</span>
+      <p class="font-display text-lg mt-2" data-i18n="sellerRegister.f3.title">You Set the Price</p>
+      <p class="text-sm text-on-surface-variant mt-1" data-i18n="sellerRegister.f3.desc">No middleman — you decide what your work is worth.</p>
+    </div>
+  </div>
+
+  <a href="/register.html?role=seller" class="bg-primary text-on-primary font-medium px-8 py-3 rounded hover:bg-primary-container transition-colors inline-block" data-i18n="sellerRegister.registerBtn">Register as a Seller</a>
+  <p class="text-sm text-on-surface-variant mt-4"><span data-i18n="sellerRegister.alreadySelling">Already selling?</span> <a href="/login.html" class="text-secondary hover:underline" data-i18n="sellerRegister.loginDashboard">Log in to your dashboard</a></p>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+</body>
+</html>

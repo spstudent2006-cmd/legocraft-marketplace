@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<!-- Sign-up tutorial video modal: shown automatically for first-time visitors.
+     Returning visitors who already watched or skipped it won't see it again
+     (tracked via localStorage), but can replay it any time via the link below. -->
+<div id="signup-video-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+  <div class="bg-surface-container-lowest rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+      <p class="font-display text-lg text-primary" data-i18n="video.howItWorks">How signing up works</p>
+      <button id="signup-video-skip" class="text-sm text-on-surface-variant hover:text-primary font-medium" data-i18n="video.skip">Skip</button>
+    </div>
+    <div class="aspect-video bg-surface-container-high relative">
+      <video id="signup-video" class="w-full h-full" controls playsinline preload="metadata" poster="/videos/how-to-signup-poster.jpg">
+        <source src="/videos/how-to-signup.mp4" type="video/mp4">
+      </video>
+      <div id="signup-video-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6">
+        <span class="material-symbols-outlined text-[40px] text-outline">videocam_off</span>
+        <p class="text-sm text-on-surface-variant" data-i18n="video.unavailable">The tutorial video isn't available yet.</p>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-4 py-3">
+      <button id="signup-video-continue" class="bg-primary text-on-primary font-medium px-5 py-2 rounded hover:bg-primary-container transition-colors" data-i18n="register.continueToSignup">Continue to Sign Up</button>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-sm mx-auto px-4 py-12">
+  <h1 class="font-display text-3xl text-primary mb-2 text-center" data-i18n="register.title">Create Account</h1>
+  <p class="text-center text-sm text-on-surface-variant mb-2" data-i18n="register.subtitle">Join Legocraft as a buyer or a seller</p>
+  <p class="text-center text-sm mb-8"><button id="signup-video-replay" class="text-secondary hover:underline" data-i18n="register.watchVideo">Watch how sign up works</button></p>
+
+  <div class="flex rounded-lg border border-outline-variant overflow-hidden mb-6 text-sm font-medium">
+    <button id="tab-buyer" class="flex-1 py-2 bg-primary text-on-primary" data-i18n="register.wantBuy">I want to Buy</button>
+    <button id="tab-seller" class="flex-1 py-2" data-i18n="register.wantSell">I want to Sell</button>
+  </div>
+
+  <form id="register-form" class="flex flex-col gap-4">
+    <input type="hidden" id="role" value="buyer">
+    <div>
+      <label class="block text-sm font-medium mb-1" data-i18n="register.fullName">Full Name</label>
+      <input id="name" required class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+    </div>
+    <div id="shop-field" class="hidden">
+      <label class="block text-sm font-medium mb-1" data-i18n="register.shopName">Shop / Brand Name</label>
+      <input id="shopName" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+    </div>
+
+    <!-- Buyers: email + phone are both required -->
+    <div id="buyer-contact-fields" class="flex flex-col gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1" data-i18n="register.email">Email</label>
+        <input id="email" type="email" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" data-i18n="register.phone">Phone Number</label>
+        <input id="phone" type="tel" pattern="[0-9]{7,15}" data-i18n-placeholder="register.phonePlaceholder" placeholder="e.g. 9876543210" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+        <p class="text-xs text-on-surface-variant mt-1" data-i18n="register.phoneHint">Digits only. You can log in with either your email or this number.</p>
+      </div>
+    </div>
+
+    <!-- Sellers: choose EITHER email OR phone -->
+    <div id="seller-contact-fields" class="hidden flex-col gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-1" data-i18n="register.contactWith">Contact With</label>
+        <div class="flex rounded-lg border border-outline-variant overflow-hidden text-sm font-medium">
+          <button type="button" id="contact-email-btn" class="flex-1 py-2 bg-primary text-on-primary" data-i18n="register.email">Email</button>
+          <button type="button" id="contact-phone-btn" class="flex-1 py-2" data-i18n="register.phone">Phone Number</button>
+        </div>
+      </div>
+      <div id="seller-email-field">
+        <label class="block text-sm font-medium mb-1" data-i18n="register.email">Email</label>
+        <input id="seller-email" type="email" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+      </div>
+      <div id="seller-phone-field" class="hidden">
+        <label class="block text-sm font-medium mb-1" data-i18n="register.phone">Phone Number</label>
+        <input id="seller-phone" type="tel" pattern="[0-9]{7,15}" data-i18n-placeholder="register.phonePlaceholder" placeholder="e.g. 9876543210" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+        <p class="text-xs text-on-surface-variant mt-1" data-i18n="register.phoneHintDigits">Digits only.</p>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1" data-i18n="register.password">Password</label>
+      <input id="password" type="password" required minlength="6" class="w-full border border-outline-variant rounded px-3 py-2 text-sm">
+    </div>
+    <button class="bg-primary text-on-primary font-medium py-3 rounded hover:bg-primary-container transition-colors" data-i18n="register.submit">Create Account</button>
+  </form>
+
+  <p class="text-center text-sm text-on-surface-variant mt-6"><span data-i18n="register.haveAccount">Already have an account?</span> <a href="/login.html" class="text-secondary hover:underline" data-i18n="register.login">Log in</a></p>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+/* ---------- Sign-up tutorial video ---------- */
+const SEEN_KEY = "lc_signup_tutorial_seen";
+const videoModal = document.getElementById("signup-video-modal");
+const video = document.getElementById("signup-video");
+const videoFallback = document.getElementById("signup-video-fallback");
+
+function openSignupVideo() {
+  videoModal.classList.remove("hidden");
+  videoFallback.classList.add("hidden");
+  video.classList.remove("hidden");
+  video.currentTime = 0;
+  video.play().catch(() => { /* autoplay may be blocked; user can press play */ });
+}
+function closeSignupVideo(markSeen = true) {
+  videoModal.classList.add("hidden");
+  video.pause();
+  if (markSeen) localStorage.setItem(SEEN_KEY, "1");
+}
+// If the video file hasn't been added yet (404 or decode error), show a
+// friendly fallback instead of a broken player, so sign-up is never blocked.
+video.addEventListener("error", () => {
+  video.classList.add("hidden");
+  videoFallback.classList.remove("hidden");
+});
+document.getElementById("signup-video-skip").onclick = () => closeSignupVideo(true);
+document.getElementById("signup-video-continue").onclick = () => closeSignupVideo(true);
+document.getElementById("signup-video-replay").onclick = () => openSignupVideo();
+video.addEventListener("ended", () => closeSignupVideo(true));
+
+// Auto-play for first-time visitors only; anyone can replay it later via the link above.
+if (!localStorage.getItem(SEEN_KEY)) openSignupVideo();
+
+const roleInput = document.getElementById("role");
+const shopField = document.getElementById("shop-field");
+const tabBuyer = document.getElementById("tab-buyer");
+const tabSeller = document.getElementById("tab-seller");
+const buyerContactFields = document.getElementById("buyer-contact-fields");
+const sellerContactFields = document.getElementById("seller-contact-fields");
+
+function setRole(role) {
+  roleInput.value = role;
+  shopField.classList.toggle("hidden", role !== "seller");
+
+  // Buyers must fill in BOTH email and phone. Sellers pick ONE contact method.
+  buyerContactFields.classList.toggle("hidden", role !== "buyer");
+  sellerContactFields.classList.toggle("hidden", role !== "seller");
+  sellerContactFields.classList.toggle("flex", role === "seller");
+
+  document.getElementById("email").required = role === "buyer";
+  document.getElementById("phone").required = role === "buyer";
+
+  tabBuyer.className = `flex-1 py-2 ${role === "buyer" ? "bg-primary text-on-primary" : ""}`;
+  tabSeller.className = `flex-1 py-2 ${role === "seller" ? "bg-primary text-on-primary" : ""}`;
+}
+tabBuyer.onclick = () => setRole("buyer");
+tabSeller.onclick = () => setRole("seller");
+
+// Seller-only: toggle between "contact by email" and "contact by phone"
+let sellerContactMethod = "email";
+const contactEmailBtn = document.getElementById("contact-email-btn");
+const contactPhoneBtn = document.getElementById("contact-phone-btn");
+const sellerEmailField = document.getElementById("seller-email-field");
+const sellerPhoneField = document.getElementById("seller-phone-field");
+
+function setSellerContactMethod(method) {
+  sellerContactMethod = method;
+  sellerEmailField.classList.toggle("hidden", method !== "email");
+  sellerPhoneField.classList.toggle("hidden", method !== "phone");
+  document.getElementById("seller-email").required = method === "email";
+  document.getElementById("seller-phone").required = method === "phone";
+  contactEmailBtn.className = `flex-1 py-2 ${method === "email" ? "bg-primary text-on-primary" : ""}`;
+  contactPhoneBtn.className = `flex-1 py-2 ${method === "phone" ? "bg-primary text-on-primary" : ""}`;
+}
+contactEmailBtn.onclick = () => setSellerContactMethod("email");
+contactPhoneBtn.onclick = () => setSellerContactMethod("phone");
+setSellerContactMethod("email");
+
+// preselect from ?role=seller
+if (new URLSearchParams(location.search).get("role") === "seller") setRole("seller");
+else setRole("buyer");
+
+document.getElementById("register-form").onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const isSeller = roleInput.value === "seller";
+    const body = {
+      name: document.getElementById("name").value,
+      password: document.getElementById("password").value,
+      role: roleInput.value,
+      shopName: document.getElementById("shopName").value
+    };
+    if (isSeller) {
+      body.contactMethod = sellerContactMethod;
+      body.email = sellerContactMethod === "email" ? document.getElementById("seller-email").value : "";
+      body.phone = sellerContactMethod === "phone" ? document.getElementById("seller-phone").value : "";
+    } else {
+      body.email = document.getElementById("email").value;
+      body.phone = document.getElementById("phone").value;
+    }
+    const { user } = await api("/api/register", { method: "POST", body });
+    toast(`Welcome to Legocraft, ${user.name.split(" ")[0]}!`);
+    setTimeout(() => location.href = user.role === "seller" ? "/seller-dashboard.html" : "/index.html", 500);
+  } catch (err) { toast(err.message, "error"); }
+};
+</script>
+</body>
+</html>

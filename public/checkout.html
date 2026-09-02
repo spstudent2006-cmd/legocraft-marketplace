@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | Legocraft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="/js/theme.js"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#182442">
+</head>
+<body class="bg-surface text-on-surface font-body">
+<div id="lc-header"></div>
+
+<main class="max-w-3xl mx-auto px-4 md:px-8 py-8">
+  <h1 class="font-display text-3xl text-primary mb-6" data-i18n="checkout.title">Checkout</h1>
+
+  <div id="guard" class="hidden bg-error-container text-error rounded-lg p-4 mb-6">
+    <span data-i18n="checkout.loginPrompt1">Please</span> <a href="/login.html?next=/checkout.html" class="underline font-medium" data-i18n="checkout.loginPrompt2">log in</a> <span data-i18n="checkout.loginPrompt3">to complete your order.</span>
+  </div>
+
+  <div id="order-box">
+    <div id="order-lines" class="flex flex-col gap-2 mb-6"></div>
+    <p id="order-total" class="font-display text-xl mb-6"></p>
+
+    <label class="block font-body text-sm font-medium mb-1" data-i18n="checkout.deliveryAddress">Delivery Address</label>
+    <textarea id="address" rows="3" class="w-full border border-outline-variant rounded px-3 py-2 text-sm mb-6" data-i18n-placeholder="checkout.addressPlaceholder" placeholder="Full name, house/street, city, state, pincode, phone number"></textarea>
+
+    <button id="place-order" class="bg-primary text-on-primary font-medium px-6 py-3 rounded hover:bg-primary-container transition-colors w-full md:w-auto" data-i18n="checkout.placeOrder">Place Order (Cash on Delivery)</button>
+  </div>
+</main>
+
+<div id="lc-footer"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/partials.js"></script>
+<script>
+async function init() {
+  const items = Cart.get();
+  document.getElementById("order-lines").innerHTML = items.map(i =>
+    `<div class="flex justify-between text-sm"><span>${escapeHtml(i.title)} × ${i.qty}</span><span>₹${i.price * i.qty}</span></div>`
+  ).join("") || `<p class="text-on-surface-variant">${t("checkout.cartEmpty")}</p>`;
+  document.getElementById("order-total").textContent = `${t("common.total")}: ₹${Cart.total()}`;
+
+  try {
+    const { user } = await api("/api/me");
+    if (!user) document.getElementById("guard").classList.remove("hidden");
+  } catch { document.getElementById("guard").classList.remove("hidden"); }
+
+  document.getElementById("place-order").onclick = async () => {
+    const address = document.getElementById("address").value.trim();
+    if (items.length === 0) return toast(t("checkout.cartEmpty"), "error");
+    if (!address) return toast(t("checkout.enterAddress"), "error");
+    try {
+      await api("/api/orders", { method: "POST", body: { items, address } });
+      Cart.clear();
+      toast(t("checkout.orderPlaced"));
+      setTimeout(() => location.href = "/orders.html", 800);
+    } catch (e) {
+      toast(e.message, "error");
+    }
+  };
+}
+init();
+document.addEventListener("lc-lang-changed", init);
+</script>
+</body>
+</html>

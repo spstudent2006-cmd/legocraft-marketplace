@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LEGOCRAFT</string>
+    <string name="title_activity_main">LEGOCRAFT</string>
+    <string name="package_name">com.legocraft.marketplace</string>
+    <string name="custom_url_scheme">com.legocraft.marketplace</string>
+</resources>
